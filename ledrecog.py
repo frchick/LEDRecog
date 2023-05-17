@@ -1,7 +1,7 @@
 import cv2
 from matplotlib import pyplot as plt
 
-samples = [ 'green_normal', 'green_bright', 'red_normal', 'red_bright', 'off_normal', 'off_bright' ]
+samples = [ 'green_normal', 'green_bright', 'red_normal', 'red_bright', 'off_normal', 'off_bright', 'white_normal', 'white_bright' ]
 img = {}
 hsv = {}
 h_hist = {}
@@ -18,7 +18,7 @@ for s in samples:
   v_hist[s] = cv2.calcHist([hsv[s]],[2], None, [256], [0,256])
 
 # サブプロットを作成する
-fig, ax = plt.subplots(2, 3)
+fig, ax = plt.subplots(2, 4)
 
 # 分布をプロットする
 for i, s in enumerate(samples):
