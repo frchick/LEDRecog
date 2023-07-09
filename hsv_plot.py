@@ -7,8 +7,8 @@ def clamp(v, min_v, max_v):
     return max(min_v, min(v, max_v))
 
 # サンプル画像
-#samples = [ 'green_normal', 'green_bright', 'red_normal', 'red_bright', 'off_normal', 'off_bright', 'white_normal', 'white_bright' ]
-samples = [ 'green', 'red', 'off', 'white' ]
+samples = [ 'green_normal', 'green_bright', 'red_normal', 'red_bright', 'off_normal', 'off_bright', 'white_normal', 'white_bright' ]
+#samples = [ 'green', 'red', 'off', 'white' ]
 
 # カンマ逆補正LUT
 gamma22LUT = numpy.array([pow(x/255.0 , 2.2) * 255 for x in range(256)], dtype='uint8')
@@ -100,7 +100,10 @@ for i, s in enumerate(samples):
   a.set_xlim(-1.0, 1.0)
   a.set_ylim(-1.0, 1.0)
   a.imshow(hsvCircleImg, extent=[-1.0, 1.0, -1.0, 1.0], zorder=-1)
-  a.set_title(s + ' / conv=' + str(int(conv[s])))
+  a.set_title(s)
+  a.set_xticks([])
+  a.set_yticks([])
+#  a.set_title(s + ' / conv=' + str(int(conv[s])))
 #  a.legend()
   # 分布をプロット
   a.scatter(Hx[s], Hy[s], 8, color=Col[s])
