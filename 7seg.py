@@ -42,22 +42,36 @@ chars = [
   char_pattern(' ', [0, 0,0, 0, 0,0, 0]),
 ]
 
-# 7セグマスク画像(グレースケールで読み込む)
+# テストmain関数
+def main():
+  # サンプル画像(グレースケールで読み込む)
+  samples = [ '7seg_F', '7seg_-', '7seg_H', '7seg_1', '7seg_ ' ]
+  for s in samples:
+    # テスト画像を読み込む
+    img = cv2.imread('data/samples/' + s + '.png', cv2.IMREAD_GRAYSCALE)
+    print(s, end=': ')
+    # 文字の読み取り
+    ch = read_7seg_char(img)
+    print(' > ch=' + ch)
+
 img_7seg_mask = []
-sum_7seg_mask_pix = []
 
-for i in range(7):
-  img = cv2.imread('data/res/seg' + str(i) + '_.png', 0)
-  img_7seg_mask.append(img)
-  sum_7seg_mask_pix.append(np.sum(img))
+# 7セグマスク画像を読み込む
+def load_7seg_masks():
+  # すでに読み込み済みなら何もしない
+  if 0 == len(img_7seg_mask):
+    # 7セグマスク画像(グレースケールで読み込む)
+    for i in range(7):
+      img = cv2.imread('data/res/seg' + str(i) + '.png', cv2.IMREAD_GRAYSCALE)
+      img = cv2.LUT(img, gamma22LUT)
+      img_7seg_mask.append(img)
 
-# サンプル画像(グレースケールで読み込む)
-samples = [ '7seg_F', '7seg_-', '7seg_H', '7seg_1', '7seg_ ' ]
-for s in samples:
-  # テスト画像を読み込む
-  img = cv2.imread('data/samples/' + s + '.png', 0)
+# 7セグ文字の読み取り
+def read_7seg_char(img):
+  # 7セグマスク画像を読み込む
+  load_7seg_masks()
+  # 輝度をリニア化
   img = cv2.LUT(img, gamma22LUT)
-  print(s, end=': ')
   # コントラスト強める
   # ヒストグラムのピークをブラックレベルとする
   hist = cv2.calcHist([img], [0], None, [256], [0, 256])
@@ -69,27 +83,34 @@ for s in samples:
       black_floor = i
   alpha = 2.0 * 255 / (255 - black_floor)
   img = cv2.convertScaleAbs(img, alpha=alpha, beta=-alpha*black_floor)
-  # セグメント毎の、正規化された輝度を計算
-  separator = ''
+  # セグメント毎にマスクされた輝度と、その反転輝度を計算
   v = [ 0.0 ] * 7
+  iv = [ 0.0 ] * 7
+  inv_img = cv2.bitwise_not(img)
   for i in range(7):
     masked_img = cv2.multiply(img, img_7seg_mask[i], scale=1.0/255.0)
-    sum_pix = np.sum(masked_img)
-    v[i] = sum_pix / sum_7seg_mask_pix[i]
-    print(separator + '{:.2f}'.format(v[i]), end='')
-    separator = ', '
+    v[i] = np.sum(masked_img)
+    masked_img = cv2.multiply(inv_img, img_7seg_mask[i], scale=1.0/255.0)
+    iv[i] = np.sum(masked_img)
 
   # どの文字かを判定する
   max_vv = 0.0
   ch = '?'
+  separator = ''
   for c in chars:
     vv = 0
     for i in range(7):
       if 0 < c.pattern[i]:
         vv += v[i]
       else:
-        vv += (1.0 - v[i])
+        vv += iv[i]
     if max_vv < vv:
       max_vv = vv
       ch = c.ch
-  print(': ch=' + ch)
+    print(separator + c.ch + ':' + str(vv), end='')
+    separator = ', '
+  return ch
+
+# エントリーポイント
+if __name__ == "__main__":
+  main()
